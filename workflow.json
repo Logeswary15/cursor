@@ -1,0 +1,73 @@
+{
+    "name": "Travel Itinerary Generator",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "travel-itinerary",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "model": "gpt-4o",
+                "prompt": "=Generate a {{json.body.days}}-day travel itinerary for {{json.body.destination}} with a budget of ${{json.body.budget}}. \nTravelers: {{json.body.travelers}}\nMode of Travel: {{json.body.mode}}\nPreferences: {{json.body.preferences}}\n\nPlease format the response as a clean, HTML-friendly daily plan.",
+                "maxTokens": 2000
+            },
+            "name": "LLM Chain",
+            "type": "@n8n/n8n-nodes-langchain.chainLlm",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "fromEmail": "travel-bot@example.com",
+                "toEmail": "={{json.body.email}}",
+                "subject": "Your Trip to {{json.body.destination}} is Ready! 🌍",
+                "text": "={{$json.text}}",
+                "html": "={{$json.text}}"
+            },
+            "name": "Send Email",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 1,
+            "position": [
+                800,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "LLM Chain",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LLM Chain": {
+            "main": [
+                [
+                    {
+                        "node": "Send Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
